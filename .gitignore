@@ -43,6 +43,7 @@ Temporary Items
 .apdisk
 
 # Codes bother others
-./BPNet
-./nets
-./test
+BPNet/
+nets/
+test/
+test.py
