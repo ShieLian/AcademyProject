@@ -27,9 +27,12 @@ class Reptile(object):
             string html
             string path
         """
+        f=open(path,"w")
+        f.write(html)
+        f.close
     def startFetch(self,url,advancedOption=""):  
         '''
-        params:
+        pars:
             string url
             string advancedOption
         '''
