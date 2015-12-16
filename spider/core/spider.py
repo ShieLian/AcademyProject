@@ -6,6 +6,8 @@ Created on 2015年11月30日
 '''
 import cookielib
 import urllib2
+from urllib2 import HTTPError
+import os
 
 from utils import parserlib
 from utils.CustomErrors import *
@@ -23,9 +25,16 @@ class Spider(object):
                 self.timeout=params["timeout"]
             else:
                 self.timeout=4
+            if params.has_key("path"):
+                self.path=params["path"]+'/'#!
+                if not os.path.exists(self.path):
+                    os.makedirs(self.path)
+            else:
+                self.path="./"
         else:
             self.timeout=4
         self.notitleid=1
+        self.protocal="http"
         cookieJar = cookielib.CookieJar()
         self.cookieJar=cookieJar
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
@@ -34,36 +43,60 @@ class Spider(object):
         
     def fetchPage(self,url,usecookie=False):
         """
-                底层，抓取特定的一个页面
+                抓取特定的一个页面
                 返回：(string)html
         pars:
             url(string)
             usecookie(boolean)
         """
+        protocal=url[:url.find('://')]#协议名
+
         if usecookie:
             urllib2.install_opener(self.opener)
         else:
             urllib2.install_opener(None)
+            
         response=urllib2.urlopen(url,timeout=self.timeout)
         html=response.read()
         try:
             title=parserlib.getTitle(html)
         except NoTitleError:
-            title=("notitle-%d"%self.notitleid)
+            title=("Untitled-%d"%self.notitleid)
             ++self.notitleid
-        self.savePage(html, ("./%s.html"% title).decode("UTF-8"))
-        resourceUrls=parserlib.parseImgs(html)|parserlib.parseStyles(html)|parserlib.parseScripts(html)
+        resourceUrls=parserlib.parseImgs(html)|parserlib.parseStyles(html)|parserlib.parseScripts(html)|parserlib.parseStyleImgs(html)
         frameUrls=parserlib.parseFrames(html)
-        for reurl in resourceUrls:
-            print parserlib.getAbsUrl(reurl, url)
-    def savePage(self,text,path):
+        total_file=len(resourceUrls)+len(frameUrls)+1
+        downloaded_file=0
+        '''@todo'''
+        for resourceurl in resourceUrls:
+            resourceurl=parserlib.getAbsUrl(resourceurl, url)
+            try:
+                response=urllib2.urlopen(resourceurl)
+            except HTTPError:
+                continue
+            if resourceurl[-3:]=="css":
+                self.saveResource(self.path+parserlib.getFileName(resourceurl),parserlib.filtUrl(response.read()))
+            else:
+                self.saveResource(self.path+parserlib.getFileName(resourceurl),response.read())
+            ++downloaded_file
+        self.saveText(parserlib.filtUrl(html,url),self.path+title+".html")
+        print "!"
+        ++downloaded_file
+        for frameurl in frameUrls:
+            if not os.path.exists(parserlib.getFileName(frameurl)):
+                try:
+                    self.fetchPage(frameurl,usecookie)
+                except HTTPError:
+                    continue
+                ++downloaded_file
+    def saveText(self,text,path):
         """
                 底层，保存(string)text，
         pars:
             string html
             string path
         """
-        f=open(path,"w")
+        f=open(path.decode("UTF-8"),"w")
         f.write(text)
         f.close()
     
