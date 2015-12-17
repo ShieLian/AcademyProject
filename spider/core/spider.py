@@ -6,7 +6,8 @@ Created on 2015年11月30日
 '''
 import cookielib
 import urllib2
-from urllib2 import HTTPError
+from urllib2 import HTTPError,URLError
+
 import os
 
 from utils import parserlib
@@ -55,15 +56,20 @@ class Spider(object):
             urllib2.install_opener(self.opener)
         else:
             urllib2.install_opener(None)
-            
-        response=urllib2.urlopen(url,timeout=self.timeout)
+        
+        try:
+            response=urllib2.urlopen(url,timeout=self.timeout)
+        except URLError:
+            raise NoConnectionError
         html=response.read()
+        print html.decode("utf-8")
         try:
             title=parserlib.getTitle(html)
         except NoTitleError:
             title=("Untitled-%d"%self.notitleid)
             ++self.notitleid
-        resourceUrls=parserlib.parseImgs(html)|parserlib.parseStyles(html)|parserlib.parseScripts(html)|parserlib.parseStyleImgs(html)
+        #resourceUrls=parserlib.parseImgs(html)|parserlib.parseStyles(html)|parserlib.parseScripts(html)|parserlib.parseStyleImgs(html)
+        resourceUrls=parserlib.parseSrcs(html)|parserlib.parseStyleImgs(html)
         frameUrls=parserlib.parseFrames(html)
         total_file=len(resourceUrls)+len(frameUrls)+1
         downloaded_file=0
@@ -73,6 +79,9 @@ class Spider(object):
             try:
                 response=urllib2.urlopen(resourceurl)
             except HTTPError:
+                continue
+            except URLError:
+                print resourceurl
                 continue
             if resourceurl[-3:]=="css":
                 self.saveResource(self.path+parserlib.getFileName(resourceurl),parserlib.filtUrl(response.read()))

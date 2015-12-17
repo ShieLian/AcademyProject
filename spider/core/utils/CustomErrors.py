@@ -6,3 +6,5 @@ Created on 2015�?12�?14�?
 '''
 class NoTitleError(BaseException):
     pass
+class NoConnectionError(BaseException):
+    pass

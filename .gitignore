@@ -47,3 +47,4 @@ BPNet/
 nets/
 test/
 test.py
+*.pyc
