@@ -49,7 +49,6 @@ def parseScripts(html):
     """
     jss=re.findall("(<script (?:[^=]+=[^\b>]*)>)",html,re.I)
     urls=[]
-#     print jss
     for i in range(len(jss)):
         if len(re.findall('src="([^"]+)"', jss[i]))!=0: 
             urls.append(re.findall('src="([^"]+)"', jss[i])[0])
@@ -63,7 +62,6 @@ def parseStyles(html):
     """
     styles=re.findall("(<style (?:[^=]+=[^\b>]*)>)",html,re.I)
     urls=[]
-#     print styles
     for i in range(len(styles)):
         if len(re.findall('src="([^"]+)"', styles[i]))!=0: 
             urls.append(re.findall('src="([^"]+)"', styles[i])[0])
@@ -71,7 +69,6 @@ def parseStyles(html):
 
 def parseFrames(html):
     frames=re.findall("(<frame (?:[^=]+=[^\b>]*)>)",html,re.I)
-#     print frames
     urls=[]
     for tag in frames:
         urls.append(re.findall('src[\b]*=[\b]*"([^"]+)',tag)[0])
@@ -105,7 +102,6 @@ def filtUrl(text,path):
     for url in hrefs:
         while (not isAbs(url)) and('href="'+url in text):
             index=text.find('href="'+url)
-#             print getAbsUrl(url,path),text[index+len(url)+1:]
             text=text[:index+6]+getAbsUrl(url,path)+text[index+len(url)+6:]
     return text
 
@@ -115,10 +111,12 @@ def isAbs(url):
 def getTitle(html):
     tittles=re.findall("<(?:title)>([^<]+)</(?:title)>",html,re.I)
     if len(tittles)==0:
-#         print html
         raise NoTitleError()
     else:
-        return tittles[0]
+        tittle=tittles[0]
+        tittle=tittle.replace('\n','',tittle.count('\n'))
+        tittle=tittle.replace('\r','',tittle.count('\r'))
+        return tittle
 
 def getFileName(url):
     if "?" in url:

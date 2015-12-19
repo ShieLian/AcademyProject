@@ -1,8 +1,10 @@
 '''
-Created on 2015å¹?11æœ?30æ—?
+Created on 2015.11.30
 
 @author: ShieLian
 '''
 
-if __name__ == '__main__':
+def main():
     pass
+
+main()

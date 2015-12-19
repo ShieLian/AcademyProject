@@ -62,7 +62,6 @@ class Spider(object):
         except URLError:
             raise NoConnectionError
         html=response.read()
-        print html.decode("utf-8")
         try:
             title=parserlib.getTitle(html)
         except NoTitleError:
@@ -88,7 +87,7 @@ class Spider(object):
             else:
                 self.saveResource(self.path+parserlib.getFileName(resourceurl),response.read())
             ++downloaded_file
-        self.saveText(parserlib.filtUrl(html,url),self.path+title+".html")
+        self.saveText(("<!-- saved form %s-->\n"%url)+parserlib.filtUrl(html,url),self.path+title+".html")
         print "!"
         ++downloaded_file
         for frameurl in frameUrls:
