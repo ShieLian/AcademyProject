@@ -119,10 +119,10 @@ class Spider(object):
         f.write(bytes)
         f.close()
         
-def startFetch(self,url,advancedOption=""):  
+def startFetch(self,url,advancedOption={}):  
     '''
     pars:
         string url
-        string advancedOption
+        dic advancedOption
     '''
     #urllib队列
