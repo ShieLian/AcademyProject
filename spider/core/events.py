@@ -4,6 +4,7 @@ Created on 2015年12月21日
 
 @author: ShieLian
 '''
+import threading
 class Event:
     def __init__(self,eventname):
         self.name=eventname
@@ -11,6 +12,7 @@ class EventBus:
     def __init__(self):
         self.listeners={}
         self.queues={}
+        self.fireThread=threading.Thread(target=self.fire)
     def registry(self,eventListener):
         if self.listeners.has_key(eventListener.eventName):
             self.listeners[eventListener.eventName].append(eventListener)
