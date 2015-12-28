@@ -23,13 +23,13 @@ class Frame(object):
         self.root = Tk()
         self.root.title("网页爬取器")
         
-        self.entry_url = StringVar()
+        self.entry_targeturl = StringVar()
         self.entry_savepath = StringVar()
 
         self.label1=Label(self.root,text='目标网页地址：')
         self.label1.grid(row=0, column=0, sticky=W)
         
-        self.e1 = Entry(self.root, textvariable=self.entry_url)
+        self.e1 = Entry(self.root, textvariable=self.entry_targeturl)
         self.e1.grid(row=0, column=1, columnspan=3)
         
         self.label2 = Label(self.root, text='   保存在： ')
@@ -43,8 +43,8 @@ class Frame(object):
         self.b2 = Button(self.root, text='高级选项', command=self.openAdvancedOptionDialog)
         self.b2.grid(row=3, column=0)
         
-        self.process=StringVar()#显示进度的StringVar
-        self.label3=Label(self.root, textvariable=self.process)
+        self.content=StringVar()#显示进度的StringVar
+        self.label3=Label(self.root, textvariable=self.content)
         self.label3.grid(row=4, column=0, columnspan=5, sticky=W+E)
         
         self.b3 = Button(self.root, text='   设置   ', command=self.openOptionDialog)
@@ -81,15 +81,24 @@ class Frame(object):
         self.optionDialog=self.optionDialog.show()
         
     def getInfo(self):                                                                                  # 将用户的设置的目标网站与储存位置储存起来
-        return self.entry_url.get(),self.entry_savepath.get()
+        return self.entry_targeturl.get(),self.entry_savepath.get()
     
     def updateProcess(self,string):
-        self.process.set(string)
+        self.content.set(string)
         
     def start(self):                                                                                    # 调用程序开始爬取页面的函数
         #Label(self.root,textvariable=self.label3).grid(row=3,column=0,columnspan=5,sticky=W)
-        #TODO:检查文件路径
-        print "程序未完成，该功能暂时无法使用！"
+        if  not (self.entry_targeturl.get() or (self.settings and self.settings["urllistfile"])):
+            tkMessageBox.showerror(u"错误",u"没有设置目标网页地址，请设置目标URl或导入URL列表文件")
+            return
+        path=self.entry_savepath.get()
+        if not os.path.exists(path) or not os.path.isdir(path) :
+            choose=tkMessageBox.askquestion(u"警告",u"文件路径不存在,是否新建路径?")
+            if choose=='no':
+                return
+            else:
+                os.makedirs(path)
+        print "开始爬取"
 
     def end(self):                                                                                      # 调用程序结束页面的爬取的函数
         #self.label3.grid_forget()
