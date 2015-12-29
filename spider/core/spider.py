@@ -11,7 +11,7 @@ from urllib2 import HTTPError,URLError
 import os
 
 from spider import Launcher
-from spider.core.events import *
+from spider.core import events
 from utils import parserlib
 from utils.CustomErrors import *
 
@@ -123,7 +123,7 @@ class Spider(object):
         f.write(bytes)
         f.close()
         Launcher.processLock.acquire()
-        Launcher.processEventBus.pushEvent(ProcessEvent(content=1))
+        Launcher.processEventBus.pushEvent(events.ProcessEvent(content=1))
         Launcher.processLock.release()
         if not self.alive:
             self.shut()

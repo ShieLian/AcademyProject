@@ -23,20 +23,20 @@ class Frame(object):
         self.root = Tk()
         self.root.title("网页爬取器")
         
-        self.entry_targeturl = StringVar()
-        self.entry_savepath = StringVar()
+        self.str_targeturl = StringVar()
+        self.str_savepath = StringVar()
 
         self.label1=Label(self.root,text='目标网页地址：')
         self.label1.grid(row=0, column=0, sticky=W)
         
-        self.e1 = Entry(self.root, textvariable=self.entry_targeturl)
-        self.e1.grid(row=0, column=1, columnspan=3)
+        self.entry_targeturl = Entry(self.root, textvariable=self.str_targeturl)
+        self.entry_targeturl.grid(row=0, column=1, columnspan=3)
         
         self.label2 = Label(self.root, text='   保存在： ')
         self.label2.grid(row=1, column=0, sticky=W)
         
-        self.e2 = Entry(self.root, textvariable=self.entry_savepath)
-        self.e2.grid(row=1, column=1, columnspan=3)
+        self.entry_savepath = Entry(self.root, textvariable=self.str_savepath)
+        self.entry_savepath.grid(row=1, column=1, columnspan=3)
         
         self.b1 = Button(self.root, text='   浏览   ', command=self.selectSavePath)
         self.b1.grid(row=1, column=4)
@@ -70,7 +70,7 @@ class Frame(object):
         self.root.mainloop()
     def selectSavePath(self):                                                                         # 打开文件浏览器的函数
         path=tkFileDialog.askdirectory()
-        self.entry_savepath.set(path)
+        self.str_savepath.set(path)
         print path
 
     def openAdvancedOptionDialog(self):                                                                         # 打开高级选项界面的函数
@@ -81,17 +81,17 @@ class Frame(object):
         self.optionDialog=self.optionDialog.show()
         
     def getInfo(self):                                                                                  # 将用户的设置的目标网站与储存位置储存起来
-        return self.entry_targeturl.get(),self.entry_savepath.get()
+        return self.str_targeturl.get(),self.str_savepath.get()
     
     def updateProcess(self,string):
         self.content.set(string)
         
     def start(self):                                                                                    # 调用程序开始爬取页面的函数
         #Label(self.root,textvariable=self.label3).grid(row=3,column=0,columnspan=5,sticky=W)
-        if  not (self.entry_targeturl.get() or (self.settings and self.settings["urllistfile"])):
+        if  not (self.str_targeturl.get() or (self.settings and self.settings["urllistfile"])):
             tkMessageBox.showerror(u"错误",u"没有设置目标网页地址，请设置目标URl或导入URL列表文件")
             return
-        path=self.entry_savepath.get()
+        path=self.str_savepath.get()
         if not os.path.exists(path) or not os.path.isdir(path) :
             choose=tkMessageBox.askquestion(u"警告",u"文件路径不存在,是否新建路径?")
             if choose=='no':
@@ -231,10 +231,13 @@ class OptionsDialog:
         
     def suretoset(self):                     # 将用户的设置储存起来
         path=self.entry_urlListFile.get()
-        print not os.path.exists(path),os.path.isfile(path)
         if not (os.path.isfile(path) or os.path.exists(path) or path==""):
             tkMessageBox.showerror(u"错误",u"文件不存在！")
             return 0
+        if path:
+            self.father.entry_targeturl['state']='readonly'
+        else:
+            self.father.entry_targeturl['state']='normal'
         self.top.withdraw()
         self.settings=self.getsettings()
         self.father.settings=self.getsettings()

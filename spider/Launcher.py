@@ -4,19 +4,17 @@ Created on 2015.11.30
 
 @author: ShieLian
 '''
+import copy
+
 import core.events as events
 import threading
 from gui.frame import *
-processEventBus=events.EventBus()
-frame=Frame()
-
+from core.utils import parserlib
 '''
 @todo 监听注册&新建线程
 '''
 def main():
     processEventBus.registry(events.ProcessListener(processEventHandler))
-def startFetch(targetUrl,savePath,settings,advancedSettings):
-    pass
 downLoadedResourceNum=0
 resourceUrlPool=set()
 processLock=threading.Lock()
@@ -25,4 +23,14 @@ def processEventHandler(content):
     downLoadedResourceNum+=content
     frame.updateProcess("%d / %d"%(downLoadedResourceNum,len(resourceUrlPool)))
     processLock.release()
-main()
+if __name__=='main':
+    processEventBus=events.EventBus()
+    frame=Frame()
+    pass
+    #main()
+
+#接口
+def startFetch(targetUrl,savePath,settings,advancedSettings):
+    urllist=parserlib.getUrlList(targetUrl,settings,advancedSettings)
+    
+        
