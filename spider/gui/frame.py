@@ -38,26 +38,28 @@ class Frame(object):
         self.entry_savepath = Entry(self.root, textvariable=self.str_savepath)
         self.entry_savepath.grid(row=1, column=1, columnspan=3)
         
-        self.b1 = Button(self.root, text='   浏览   ', command=self.selectSavePath)
-        self.b1.grid(row=1, column=4)
-        self.b2 = Button(self.root, text='高级选项', command=self.openAdvancedOptionDialog)
-        self.b2.grid(row=3, column=0)
+        self.button_browse = Button(self.root, text='   浏览   ', command=self.selectSavePath)
+        self.button_browse.grid(row=1, column=4)
+        self.button_advancedoption = Button(self.root, text='高级选项', command=self.openAdvancedOptionDialog)
+        self.button_advancedoption.grid(row=3, column=0)
         
         self.content=StringVar()#显示进度的StringVar
         self.label3=Label(self.root, textvariable=self.content)
         self.label3.grid(row=4, column=0, columnspan=5, sticky=W+E)
         
-        self.b3 = Button(self.root, text='   设置   ', command=self.openOptionDialog)
-        self.b3.grid(row=2, column=0, columnspan=1)
+        self.button_option = Button(self.root, text='   设置   ', command=self.openOptionDialog)
+        self.button_option.grid(row=2, column=0, columnspan=1)
         
-        self.b4 = Button(self.root, text='开始爬取',fg='red', command=self.start)
-        self.b4.grid(row=2, column=3)
+        self.button_start = Button(self.root, text='开始爬取',fg='red', command=self.start)
+        self.button_start.grid(row=2, column=3)
         
-        self.b5 = Button(self.root, text='结束爬取', fg='blue',command=self.end)
-        self.b5.grid(row=2, column=4)
+        self.button_shut = Button(self.root, text='结束爬取', fg='blue',command=self.end)
+        self.button_shut.grid(row=2, column=4)
         
-        self.b6 = Button(self.root, text='退出程序', command=self.quit)
-        self.b6.grid(row=3, column=4)
+        self.button_exit = Button(self.root, text='退出程序', command=self.quit)
+        self.button_exit.grid(row=3, column=4)
+        
+        self.stateditemlist=[self.entry_targeturl,self.entry_savepath,self.button_browse,self.button_advancedoption,self.button_option,self.button_start]
         
         self.optionDialog=OptionsDialog(self)
         self.optionDialog.hide()
@@ -92,16 +94,23 @@ class Frame(object):
             tkMessageBox.showerror(u"错误",u"没有设置目标网页地址，请设置目标URl或导入URL列表文件")
             return
         path=self.str_savepath.get()
+        if not path:
+            tkMessageBox.showerror(u"错误",u"没有设置保存位置")
+            return 
         if not os.path.exists(path) or not os.path.isdir(path) :
             choose=tkMessageBox.askquestion(u"警告",u"文件路径不存在,是否新建路径?")
             if choose=='no':
                 return
             else:
                 os.makedirs(path)
+        for item in self.stateditemlist:
+            item["state"]='disable'
         print "开始爬取"
 
     def end(self):                                                                                      # 调用程序结束页面的爬取的函数
         #self.label3.grid_forget()
+        for item in self.stateditemlist:
+            item["state"]='normal'
         print "程序未完成，该功能暂时无法使用！"
 
     def quit(self):                                                                                     # 退出该程序
@@ -133,7 +142,7 @@ class AdvancedOptionsDialog:
         Label(self.top,textvariable=self.label4).grid(row=0,column=2,columnspan=3,sticky=W+E)
         
         self.b7 = Button(self.top,text='   添加   ',command=self.add_list)
-        self.b7.grid(row=1,column=3,sticky=W+E)
+        self.b7.grid(row=1,column=6,sticky=W+E)
         
         Label(self.top,textvariable=self.label5).grid(row=2,column=0,sticky=W)
         self.e3 = Entry(self.top,textvariable=self.entry3)

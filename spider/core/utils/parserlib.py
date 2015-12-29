@@ -172,7 +172,7 @@ def getUrlList(targetUrl,settings,advancedSettings):
             start=targetUrl.rfind(par)+len(par)+1
             j=start
             while j<len(targetUrl):
-                if targetUrl[j]==',' or targetUrl[j]=='&':
+                if targetUrl[j]==',' or targetUrl[j]=='&' or targetUrl[j]=='.':
                     break 
                 j+=1
             end=j

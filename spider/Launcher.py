@@ -23,14 +23,15 @@ def processEventHandler(content):
     downLoadedResourceNum+=content
     frame.updateProcess("%d / %d"%(downLoadedResourceNum,len(resourceUrlPool)))
     processLock.release()
-if __name__=='main':
+if __name__=='__main__':
     processEventBus=events.EventBus()
     frame=Frame()
-    pass
-    #main()
+    main()
 
 #接口
 def startFetch(targetUrl,savePath,settings,advancedSettings):
+    #settings:threads,urllistfile,usecookie
     urllist=parserlib.getUrlList(targetUrl,settings,advancedSettings)
-    
+    threadnum=settings["threads"]
+    threadnum=min( (len(urllist),threadnum) )
         
