@@ -115,18 +115,46 @@ class AdvancedOptionsDialog:
         
         self.top = Toplevel()
         self.top.title("高级选项")
-        self.label4 = StringVar()
-        self.label4.set('需要爬取的网页行数为: ')
-        self.entry3 = StringVar()
-        self.entry3.set('100')
         
-        Label(self.top,textvariable=self.label4).grid(row=0,column=0,columnspan=3,sticky=W)
+        self.label4 = StringVar()
+        self.label4.set('URL参数列表')
+        
+        self.entry3 = StringVar()
+        self.entry3.set('')
+        self.label5 = StringVar()
+        self.label5.set('paramname')
+        
+        self.label6 = StringVar()
+        self.label6.set('      values      ')
+        self.entry4 = IntVar()
+        self.entry4.set(0)
+        
+        
+        Label(self.top,textvariable=self.label4).grid(row=0,column=2,columnspan=3,sticky=W+E)
+        
+        self.b7 = Button(self.top,text='   添加   ',command=self.add_list)
+        self.b7.grid(row=1,column=3,sticky=W+E)
+        
+        Label(self.top,textvariable=self.label5).grid(row=2,column=0,sticky=W)
         self.e3 = Entry(self.top,textvariable=self.entry3)
-        self.e3.grid(row=0,column=3)
-        self.b7 = Button(self.top,text='确定',command=self.makesure)
-        self.b7.grid(row=2,column=2)
-        self.b8 = Button(self.top,text='取消',command=self.quittop)
-        self.b8.grid(row=2,column=3)
+        self.e3.grid(row=2,column=1,columnspan=2)
+        Label(self.top,textvariable=self.label6).grid(row=2,column=3)
+        self.e4 = Entry(self.top,textvariable=self.entry4)
+        self.e4.grid(row=2,column=4,columnspan=2)
+        self.b8 = Button(self.top,text=' 删除 ',command=self.delete)
+        self.b8.grid(row=2,column=6)
+        
+        self.b9 = Button(self.top,text='   确定   ',command=self.makesure)
+        self.b9.grid(row=3,column=2)
+        self.b10 = Button(self.top,text='   取消   ',command=self.quittop)
+        self.b10.grid(row=3,column=4)
+        
+    def add_list(self):
+        ''''''
+        
+    def delete(self):
+        ''''''
+        
     def show(self):
         self.top.deiconify()
         return self
