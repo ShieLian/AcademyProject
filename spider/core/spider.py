@@ -10,6 +10,8 @@ from urllib2 import HTTPError,URLError
 
 import os
 
+from spider import Launcher
+from spider.core.events import *
 from utils import parserlib
 from utils.CustomErrors import *
 
@@ -41,6 +43,7 @@ class Spider(object):
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookieJar))
         self.opener=opener
         urllib2.install_opener(opener)
+        self.alive=True
         
     def fetchPage(self,url,usecookie=False):
         """
@@ -69,9 +72,10 @@ class Spider(object):
             ++self.notitleid
         #resourceUrls=parserlib.parseImgs(html)|parserlib.parseStyles(html)|parserlib.parseScripts(html)|parserlib.parseStyleImgs(html)
         resourceUrls=parserlib.parseSrcs(html)|parserlib.parseStyleImgs(html)
+        Launcher.processLock.acquire()
+        Launcher.resourceUrlPool|=resourceUrls
+        Launcher.processLock.release()
         frameUrls=parserlib.parseFrames(html)
-        total_file=len(resourceUrls)+len(frameUrls)+1
-        downloaded_file=0
         '''@todo'''
         for resourceurl in resourceUrls:
             resourceurl=parserlib.getAbsUrl(resourceurl, url)
@@ -86,17 +90,14 @@ class Spider(object):
                 self.saveResource(self.path+parserlib.getFileName(resourceurl),parserlib.filtUrl(response.read()))
             else:
                 self.saveResource(self.path+parserlib.getFileName(resourceurl),response.read())
-            ++downloaded_file
         self.saveText(("<!-- saved form %s-->\n"%url)+parserlib.filtUrl(html,url),self.path+title+".html")
         print "!"
-        ++downloaded_file
         for frameurl in frameUrls:
             if not os.path.exists(parserlib.getFileName(frameurl)):
                 try:
                     self.fetchPage(frameurl,usecookie)
                 except HTTPError:
                     continue
-                ++downloaded_file
     def saveText(self,text,path):
         """
                 底层，保存(string)text，
@@ -107,7 +108,8 @@ class Spider(object):
         f=open(path.decode("UTF-8"),"w")
         f.write(text)
         f.close()
-    
+        if not self.alive :
+            self.shut()
     def saveResource(self,path,bytes):
         """
                 底层，保存(string)bytes，如图片
@@ -115,14 +117,23 @@ class Spider(object):
             string html
             string path
         """
+        if os.path.exists(path):
+            return
         f=open(path,"wb")
         f.write(bytes)
         f.close()
-        
-def startFetch(self,url,advancedOption=""):  
+        Launcher.processLock.acquire()
+        Launcher.processEventBus.pushEvent(ProcessEvent(content=1))
+        Launcher.processLock.release()
+        if not self.alive:
+            self.shut()
+    def shut(self):
+        #TODO
+        pass
+def startFetch(urlList,options,advancedOptions):  
     '''
     pars:
         string url
-        string advancedOption
+        dic advancedOption
     '''
     #urllib队列
