@@ -24,7 +24,7 @@ class Spider:
             if params.has_key("timeout"):
                 self.timeout=params["timeout"]
             else:
-                self.timeout=100
+                self.timeout=30
             if params.has_key("path"):
                 self.path=params["path"]
                 if self.path[-1]!='/':
@@ -34,7 +34,7 @@ class Spider:
             else:
                 self.path="./"
         else:
-            self.timeout=100
+            self.timeout=30
         self.notitleid=1
         self.protocal="http"
         cookieJar = cookielib.CookieJar()
@@ -46,7 +46,9 @@ class Spider:
         
         self.alive=True
         self.title=''
-        
+    
+    processLock,resourceUrlPool,processEventBus=None,None,None
+    
     def fetchPage(self,url,usecookie=False):
         """
                 抓取特定的一个页面
@@ -55,6 +57,8 @@ class Spider:
             url(string)
             usecookie(boolean)
         """
+        global processLock,resourceUrlPool,processEventBus
+        
         protocal=url[:url.find('://')]#协议名
 
         if usecookie:
@@ -62,11 +66,11 @@ class Spider:
         else:
             urllib2.install_opener(None)
         
-        #try:
-        response=urllib2.urlopen(url,timeout=self.timeout)
-        #except URLError:
-        #    print url
-        #    raise NoConnectionError
+        try:
+            response=urllib2.urlopen(url,timeout=self.timeout)
+        except URLError:
+            print url
+            raise NoConnectionError
         html=response.read()
         try:
             title=parserlib.getTitle(html)
@@ -108,7 +112,14 @@ class Spider:
                     self.fetchFrame(frameurl,self.path,usecookie)
                 except HTTPError:
                     continue
-    
+        if processLock:
+            processLock.acquire()
+            processEventBus.pushEvent(events.ProcessEvent(content=-1))
+            processLock.release()
+        #global resourceUrlPool
+        for url in resourceUrlPool:
+            print url
+            
     def fetchFrame(self,url,path,usecookie):
         """
                 抓取特定的一个框架
@@ -118,6 +129,8 @@ class Spider:
             path(string)保存路径
             usecookie(boolean)
         """
+        global processLock,resourceUrlPool,processEventBus
+        
         protocal=url[:url.find('://')]#协议名
         try:
             response=urllib2.urlopen(url,timeout=self.timeout)
@@ -125,7 +138,6 @@ class Spider:
             raise NoConnectionError
         html=response.read()
         framename=parserlib.getFrameName(url)
-        #resourceUrls=parserlib.parseImgs(html)|parserlib.parseStyles(html)|parserlib.parseScripts(html)|parserlib.parseStyleImgs(html)
         resourceUrls=parserlib.parseSrcs(html)|parserlib.parseStyleImgs(html)
         if processLock:
             processLock.acquire()
@@ -150,6 +162,10 @@ class Spider:
             else:
                 self.saveResource(path+framename+'/'+parserlib.getFileName(resourceurl),response.read())
         self.saveText(("<!-- saved from %s-->\n"%url)+parserlib.filtUrl(html,url),path+parserlib.getFrameName(url))
+        if processLock:
+            processLock.acquire()
+            processEventBus.pushEvent(events.ProcessEvent(content=-1))
+            processLock.release()
         for frameurl in frameUrls:
             if not self.alive:
                 return
@@ -178,7 +194,6 @@ class Spider:
         """
         if os.path.exists(path):
             return
-        print path
         f=open(path.decode('utf-8'),"wb")
         f.write(bytes)
         f.close()
@@ -186,7 +201,7 @@ class Spider:
             processLock.acquire()
             processEventBus.pushEvent(events.ProcessEvent(content=1))
             processLock.release()
-processLock,resourceUrlPool,processEventBus=None,None,None
+
 def startFetch(urlList,savePath,usecookie,Lock,UrlPool,EventBus):  
     '''
     pars:
@@ -194,6 +209,7 @@ def startFetch(urlList,savePath,usecookie,Lock,UrlPool,EventBus):
         dic advancedOption
     '''
     #urllib队列
+    global processLock,resourceUrlPool,processEventBus
     processLock,resourceUrlPool,processEventBus=Lock,UrlPool,EventBus
     worker=Spider({'path':savePath})
     thread=None

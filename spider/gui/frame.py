@@ -17,7 +17,7 @@ import threading
 import tkMessageBox
 import tkFileDialog
 #import spider.Launcher as Launcher
-class Frame:
+class Window:
     '''
     classdocs
     '''
@@ -68,20 +68,21 @@ class Frame:
         self.advancedOptionDialog=AdvancedOptionsDialog(self)
         self.advancedOptionDialog.hide()
         self.settings={'urllistfile':'','usecookie':1}
-        self.advancedSettings={}
+        self.advancedSettings=("","")
         self.callback=callback
         
         self.root.resizable(False, False)
+        
+    def startloop(self):
         self.root.mainloop()
+    
     def selectSavePath(self):                                                                         # 打开文件浏览器的函数
         path=tkFileDialog.askdirectory()
         self.str_savepath.set(path)
 
     def openAdvancedOptionDialog(self):                                                                         # 打开高级选项界面的函数
-        #dialog = AdvancedOptionsDialog(self)
         self.advancedOptionDialog=self.advancedOptionDialog.show()
     def openOptionDialog(self):                                                                                 # 打开设置界面的函数                                                        
-        #dialog = OptionsDialog(self)
         self.optionDialog=self.optionDialog.show()
         
     def getInfo(self):                                                                                  # 将用户的设置的目标网站与储存位置储存起来
@@ -97,7 +98,6 @@ class Frame:
         for item in self.stateditemlist:
             item["state"]='normal'
     def start(self):                                                                                    # 调用程序开始爬取页面的函数
-        #Label(self.root,textvariable=self.label3).grid(row=3,column=0,columnspan=5,sticky=W)
         if  not (self.str_targeturl.get() or (self.settings and self.settings["urllistfile"])):
             tkMessageBox.showerror(u"错误",u"没有设置目标网页地址，请设置目标URl或导入URL列表文件")
             return
@@ -131,69 +131,65 @@ import os
 class AdvancedOptionsDialog:
     def __init__(self,father): 
         self.father=father                                                                                # 构建高级选项用户界面的控件
-        self.advancedSettings={}
+        self.advancedSettings=("","")
         
         self.top = Toplevel()
         self.top.title("高级选项")
         
-        self.label4 = StringVar()
-        self.label4.set('URL参数列表')
-        
-        self.entry3 = StringVar()
-        self.entry3.set('')
-        self.label5 = StringVar()
-        self.label5.set('paramname')
-        
-        self.label6 = StringVar()
-        self.label6.set('      values      ')
-        self.entry4 = IntVar()
-        self.entry4.set(0)
+        self.var_3 = StringVar()
+        self.var_3.set('')        
+        self.var_4 = StringVar()
+        self.var_4.set('')
         
         
-        Label(self.top,textvariable=self.label4).grid(row=0,column=2,columnspan=3,sticky=W+E)
+        Label(self.top,text='URL参数列表').grid(row=0,column=0,columnspan=3,sticky=W+E)
         
-        self.b7 = Button(self.top,text='   添加   ',command=self.add_list)
-        self.b7.grid(row=1,column=6,sticky=W+E)
+#         self.button_append = Button(self.top,text='  添加  ',command=self.append)
+#         self.button_append.grid(row=1,column=4,sticky=W+E)
         
-        Label(self.top,textvariable=self.label5).grid(row=2,column=0,sticky=W)
-        self.e3 = Entry(self.top,textvariable=self.entry3)
-        self.e3.grid(row=2,column=1,columnspan=2)
-        Label(self.top,textvariable=self.label6).grid(row=2,column=3)
-        self.e4 = Entry(self.top,textvariable=self.entry4)
-        self.e4.grid(row=2,column=4,columnspan=2)
-        self.b8 = Button(self.top,text=' 删除 ',command=self.delete)
-        self.b8.grid(row=2,column=6)
+        Label(self.top,text="参数名").grid(row=1,column=0,sticky=W)
+        self.e3 = Entry(self.top,textvariable=self.var_3)
+        self.e3.grid(row=2,column=0,columnspan=2)
         
-        self.b9 = Button(self.top,text='   确定   ',command=self.makesure)
-        self.b9.grid(row=3,column=2)
-        self.b10 = Button(self.top,text='   取消   ',command=self.quittop)
-        self.b10.grid(row=3,column=4)
+        Label(self.top,text="参数取值").grid(row=1,column=1)
+        self.e4 = Entry(self.top,textvariable=self.var_4)
+        self.e4.grid(row=2,column=1,columnspan=2)
+        self.button_del = Button(self.top,text='  删除  ',command=self.clear)
+        self.button_del.grid(row=2,column=4)
         
-    def add_list(self):
-        ''''''
+        self.button_sure = Button(self.top,text='   确定   ',command=self.makesure)
+        self.button_sure.grid(row=3,column=1)
+        self.button_cancel = Button(self.top,text='   取消   ',command=self.quittop)
+        self.button_cancel.grid(row=3,column=2)
         
-    def delete(self):
-        ''''''
+    def append(self):
+        pass
         
+    def clear(self):
+        self.var_3.set('')
+        self.var_4.set('')
     def show(self):
-        self.top.deiconify()
+        try:
+            self.top.deiconify()
+        except TclError:
+            self=AdvancedOptionsDialog(self.father)
+            self.advancedSettings=self.father.advancedSettings
+        self.var_3.set(self.advancedSettings[0])
+        self.var_4.set(self.advancedSettings[1])
         return self
     def hide(self):
         self.top.withdraw()              
-    #def getnumberofrows(self):
-    #    return self.entry3.get()                                                                       # 得到用户的高级设置
                     
     def makesure(self):
+        #todo :eval check
         self.top.withdraw()
-        self.openAdvancedOptionDialog=self.getAdvancedSettings()
-        self.father.openAdvancedOptionDialog=self.getAdvancedSettings()
+        self.advancedSettings=self.getadvancedSettings()
+        self.father.advancedSettings=self.getadvancedSettings()
         
     def quittop(self):                                                                                 # 退出高级选项界面
         self.top.withdraw()
-        
-    def getAdvancedSettings(self):
-        #@todo
-        return {}
+    def getadvancedSettings(self):
+        return (self.var_3.get(),self.var_4.get())
 #----------------------------------------------------------------------------------------------------------------
 class OptionsDialog:
     def __init__(self,father):                                                                                # 构建设置用户界面的控件

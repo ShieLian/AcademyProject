@@ -11,7 +11,7 @@ import copy
 from CustomErrors import *
 
 def parseSrcs(html):
-    return set(re.findall('(?:src=)"([^"]+)',html,re.I))|set(re.findall("(?:src=)'([^']+)",html,re.I))
+    return ((set(re.findall('(?:src=)"([^"]+)',html,re.I))|set(re.findall("(?:src=)'([^']+)",html,re.I)))-{'about:blank'})
 def parseImgs(html):
     """
         返回html中所有的img标签中的src
@@ -33,7 +33,12 @@ def parseImgs(html):
 def parseStyleImgs(text):
     imgs=re.findall("url:\(([^)]+)\)",text,re.I)
     imgs+=re.findall("url\(([^)]+)\)",text,re.I)
-    return set(imgs)
+    dirtyset=set()
+    for i in range(len(imgs)):
+        url=imgs[i]
+        if url[0]==url[-1]=='"' or url[0]==url[-1]=="'":
+            imgs[i]=url[1:-1]
+    return set(imgs)-{'about:blank'}
 
 def parseScripts(html):
     """
@@ -66,7 +71,7 @@ def parseFrames(html):
     urls=[]
     for tag in frames:
         urls.append(re.findall('src[\b]*=[\b]*"([^"]+)',tag)[0])
-    return set(urls)
+    return set(urls)-{'about:blank'}
 
 def parseHrefs(html):
     
