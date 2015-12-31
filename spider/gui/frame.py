@@ -122,7 +122,6 @@ class Window:
     def end(self):                                                                                      # 调用程序结束页面的爬取的函数
         #self.label3.grid_forget()
         self.unlock()
-        print "程序未完成，该功能暂时无法使用！"
 
     def quit(self):                                                                                     # 退出该程序
         self.root.quit()

@@ -9,6 +9,7 @@ import urllib2
 from urllib2 import HTTPError,URLError
 import threading
 import os
+import re
 import copy
 
 from spider.core import events
@@ -76,9 +77,8 @@ class Spider:
             title=parserlib.getTitle(html)
         except NoTitleError:
             title=("Untitled-%d"%self.notitleid)
-            ++self.notitleid
+            self.notitleid+=1
         self.title=title
-        #resourceUrls=parserlib.parseImgs(html)|parserlib.parseStyles(html)|parserlib.parseScripts(html)|parserlib.parseStyleImgs(html)
         resourceUrls=parserlib.parseSrcs(html)|parserlib.parseStyleImgs(html)
         if processLock:
             processLock.acquire()
@@ -86,6 +86,12 @@ class Spider:
             processLock.release()
         frameUrls=parserlib.parseFrames(html)
         '''@todo'''
+        sameNameNum=0
+        while os.path.exists(self.path+title+".html"):
+            print sameNameNum
+            sameNameNum+=1
+            title='%s(%d)'%(self.title,sameNameNum)
+        print title
         if not os.path.exists((self.path+self.title+'/').decode('utf-8')):
             os.makedirs((self.path+self.title+'/').decode('utf-8'))
         for resourceurl in resourceUrls:
@@ -103,7 +109,7 @@ class Spider:
                 self.saveResource(self.path+self.title+'/'+parserlib.getFileName(resourceurl),parserlib.filtUrl(response.read(),resourceurl))
             else:
                 self.saveResource(self.path+self.title+'/'+parserlib.getFileName(resourceurl),response.read())
-        self.saveText(("<!-- saved form %s-->\n"%url)+parserlib.filtUrl(html,url,title),self.path+title+".html")
+        self.saveText(("<!-- saved from %s-->\n"%url)+parserlib.filtUrl(html,url,title),self.path+title+".html")
         for frameurl in frameUrls:
             if not self.alive:
                 return
@@ -202,7 +208,7 @@ class Spider:
             processEventBus.pushEvent(events.ProcessEvent(content=1))
             processLock.release()
 
-def startFetch(urlList,savePath,usecookie,Lock,UrlPool,EventBus):  
+def startFetch(url,savePath,usecookie,Lock,UrlPool,EventBus):  
     '''
     pars:
         string url
@@ -212,15 +218,6 @@ def startFetch(urlList,savePath,usecookie,Lock,UrlPool,EventBus):
     global processLock,resourceUrlPool,processEventBus
     processLock,resourceUrlPool,processEventBus=Lock,UrlPool,EventBus
     worker=Spider({'path':savePath})
-    thread=None
-    if usecookie:
-        for url in urlList:
-            thread=threading.Thread(target=worker.fetchPage(url, usecookie),args=(url,True))
-            thread.start()
-            thread.join()
-    else:
-        for url in urlList:
-            newworker=copy.deepcopy(worker)
-            thread=threading.Thread(target=newworker.fetchPage(url, usecookie),args=(newworker,url,False))
-            thread.start()
-            thread.join()
+    thread=threading.Thread(target=worker.fetchPage(url, usecookie),args=(url,usecookie))
+    thread.start()
+    thread.join()

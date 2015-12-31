@@ -24,8 +24,11 @@ def main():
     
 #接口
 def startFetch(targetUrl,savePath,settings,advancedSettings):
+    global downLoadedResourceNum
     urllist=parserlib.getUrlList(targetUrl,settings,advancedSettings)
-    reptile.startFetch(urllist,savePath,settings['usecookie'],processLock,resourceUrlPool,processEventBus)
+    for url in urllist:
+        downLoadedResourceNum=0
+        reptile.startFetch(url,savePath,settings['usecookie'],processLock,resourceUrlPool,processEventBus)
 
 def processEventHandler(content):
     processLock.acquire()
@@ -37,6 +40,7 @@ def processEventHandler(content):
     else:
         window.updateProcess("%d 资源已下载/ %d 资源需下载,已完成"%(downLoadedResourceNum,len(resourceUrlPool)))
         window.unlock()
+        processLock.release()
 if __name__=='__main__':
     processEventBus=events.EventBus()
     main()

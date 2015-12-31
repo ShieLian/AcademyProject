@@ -157,42 +157,39 @@ def getUrlList(targetUrl,settings,advancedSettings):
         urllistfile=open(settings['urllistfile'])
         urllist=urllistfile.readlines()
         return urllist
-    if len(advancedSettings)==0:#TODO
+    if not advancedSettings[0]:
         return [targetUrl]
     par_values_map={}
     par_index_map={}#{str:(start,end)}
-    for par in advancedSettings.keys():
         #生成每个url参数的取值列表
-        par_values_map[par]=eval(advancedSettings[par])
+    par=advancedSettings[0]
+    par_values_map[par]=eval(advancedSettings[1])
     if '?' in targetUrl:
         if not '&' in targetUrl:
             targetUrl+='&'
     else:
         targetUrl+='?' 
-    for par in advancedSettings.keys():
-        #解析每个url参数替换的位置
-        if par in targetUrl:
-            start=targetUrl.rfind(par)+len(par)+1
-            j=start
-            while j<len(targetUrl):
-                if targetUrl[j]==',' or targetUrl[j]=='&' or targetUrl[j]=='.':
-                    break 
-                j+=1
-            end=j
-            del(j)
-            par_index_map[par]=(start,end)
-        else:
-            #TODO
-            targetUrl+=par+'=&'
-            par_index_map[par]=(len(targetUrl)-1,len(targetUrl)-1)
+    #解析每个url参数替换的位置
+    if par in targetUrl:
+        start=targetUrl.rfind(par)+len(par)+1
+        j=start
+        while j<len(targetUrl):
+            if targetUrl[j]==',' or targetUrl[j]=='&' or targetUrl[j]=='.':
+                break 
+            j+=1
+        end=j
+        del(j)
+        par_index_map[par]=(start,end)
+    else:
+        #TODO
+        targetUrl+=par+'=&'
+        par_index_map[par]=(len(targetUrl)-1,len(targetUrl)-1)
     urllist=[targetUrl]
     temp=[]
-    for par in advancedSettings.keys():
-        start=par_index_map[par][0]
-        end=par_index_map[par][1]
-        for value in par_values_map[par]:
-            for url in urllist:
-                temp.append(url[:start]+str(value)+url[end:])
-        urllist=copy.deepcopy(temp)
-        temp=[]
+    start=par_index_map[par][0]
+    end=par_index_map[par][1]
+    for value in par_values_map[par]:
+        for url in urllist:
+            temp.append(url[:start]+str(value)+url[end:])
+    urllist=copy.deepcopy(temp)
     return urllist
