@@ -8,30 +8,31 @@ import copy
 
 import core.events as events
 import threading
-from gui.frame import *
+from spider.core import reptile
 from core.utils import parserlib
-'''
-@todo 监听注册&新建线程
-'''
-def main():
-    processEventBus.registry(events.ProcessListener(processEventHandler))
+import gui.frame as frame
+
 downLoadedResourceNum=0
 resourceUrlPool=set()
 processLock=threading.Lock()
+
+def main():
+    processEventBus.registry(events.ProcessListener(processEventHandler))
+   
+    
+#接口
+def startFetch(targetUrl,savePath,settings,advancedSettings):
+    urllist=parserlib.getUrlList(targetUrl,settings,advancedSettings)
+    reptile.startFetch(urllist,savePath,settings['usecookie'],processLock,resourceUrlPool,processEventBus)
+    
+if __name__=='__main__':
+    processEventBus=events.EventBus()
+    window=frame.Frame(startFetch)
+    main() 
+    
 def processEventHandler(content):
     processLock.acquire()
     downLoadedResourceNum+=content
-    frame.updateProcess("%d / %d"%(downLoadedResourceNum,len(resourceUrlPool)))
+    window.updateProcess("%d / %d"%(downLoadedResourceNum,len(resourceUrlPool)))
     processLock.release()
-if __name__=='__main__':
-    processEventBus=events.EventBus()
-    frame=Frame()
-    main()
 
-#接口
-def startFetch(targetUrl,savePath,settings,advancedSettings):
-    #settings:threads,urllistfile,usecookie
-    urllist=parserlib.getUrlList(targetUrl,settings,advancedSettings)
-    threadnum=settings["threads"]
-    threadnum=min( (len(urllist),threadnum) )
-        

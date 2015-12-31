@@ -13,13 +13,15 @@ Created on 2015年11月30日
 #设计更新进度条的接口(line 43-46)
 from Tkinter import *
 from FileDialog import *
+import threading
 import tkMessageBox
 import tkFileDialog
-class Frame(object):
+#import spider.Launcher as Launcher
+class Frame:
     '''
     classdocs
     '''
-    def __init__(self):                                                                                 # 构建基础用户界面的所有基本控件
+    def __init__(self,callback):                                                                                 # 构建基础用户界面的所有基本控件
         self.root = Tk()
         self.root.title("网页爬取器")
         
@@ -65,15 +67,15 @@ class Frame(object):
         self.optionDialog.hide()
         self.advancedOptionDialog=AdvancedOptionsDialog(self)
         self.advancedOptionDialog.hide()
-        self.settings={}
-        self.advancedsettings={}
+        self.settings={'urllistfile':'','usecookie':1}
+        self.advancedSettings={}
+        self.callback=callback
         
         self.root.resizable(False, False)
         self.root.mainloop()
     def selectSavePath(self):                                                                         # 打开文件浏览器的函数
         path=tkFileDialog.askdirectory()
         self.str_savepath.set(path)
-        print path
 
     def openAdvancedOptionDialog(self):                                                                         # 打开高级选项界面的函数
         #dialog = AdvancedOptionsDialog(self)
@@ -87,7 +89,13 @@ class Frame(object):
     
     def updateProcess(self,string):
         self.content.set(string)
-        
+    
+    def lock(self):
+        for item in self.stateditemlist:
+            item["state"]='disable'
+    def unlock(self):
+        for item in self.stateditemlist:
+            item["state"]='normal'
     def start(self):                                                                                    # 调用程序开始爬取页面的函数
         #Label(self.root,textvariable=self.label3).grid(row=3,column=0,columnspan=5,sticky=W)
         if  not (self.str_targeturl.get() or (self.settings and self.settings["urllistfile"])):
@@ -103,14 +111,17 @@ class Frame(object):
                 return
             else:
                 os.makedirs(path)
-        for item in self.stateditemlist:
-            item["state"]='disable'
-        print "开始爬取"
+        self.lock()
+        url=self.str_targeturl.get()
+        if not ('http' in url):
+            url='http://'+url
+        thread=threading.Thread(target=self.callback,args=(url,path,self.settings,self.advancedSettings))
+        thread.start()
+        #self.callback(url,path,self.settings,self.advancedSettings)
 
     def end(self):                                                                                      # 调用程序结束页面的爬取的函数
         #self.label3.grid_forget()
-        for item in self.stateditemlist:
-            item["state"]='normal'
+        self.unlock()
         print "程序未完成，该功能暂时无法使用！"
 
     def quit(self):                                                                                     # 退出该程序
@@ -120,7 +131,7 @@ import os
 class AdvancedOptionsDialog:
     def __init__(self,father): 
         self.father=father                                                                                # 构建高级选项用户界面的控件
-        self.advancedsettings={}
+        self.advancedSettings={}
         
         self.top = Toplevel()
         self.top.title("高级选项")
@@ -252,3 +263,4 @@ class OptionsDialog:
         self.father.settings=self.getsettings()
     def quitset(self):                                                                                # 退出设置界面                                                                         
         self.top.withdraw()
+        

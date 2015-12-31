@@ -10,12 +10,6 @@ import copy
 
 from CustomErrors import *
 
-
-def parseAdvanceOption(string):
-    '''
-        解析string为AdvancedOption
-    '''
-    
 def parseSrcs(html):
     return set(re.findall('(?:src=)"([^"]+)',html,re.I))|set(re.findall("(?:src=)'([^']+)",html,re.I))
 def parseImgs(html):
@@ -86,23 +80,23 @@ def parseHrefs(html):
         if len(templist)!=0:
             hrefs+=copy.deepcopy(templist)
     return set(hrefs)
-def filtUrl(text,path):
+def filtUrl(text,srcurl,title='.'):
     '''
-        过滤URL，资源只保留文件名，链接补全为绝对URL
+        过滤URL，资源只保留title/filename，链接补全为绝对URL
     '''
     #urls=parseImgs(text)|parseStyles(text)|parseScripts(text)|parseStyleImgs(text)|parseFrames(text)
     urls=parseSrcs(text)|parseStyleImgs(text)
     for url in urls:
         buffer=""
         while len(text)>0 and (url in text):
-            buffer+=text[:text.find(url)]+getFileName(url)
+            buffer+=text[:text.find(url)]+title+'/'+getFileName(url)
             text=text[text.find(url)+len(url):]
         text=copy.deepcopy(buffer+text)
     hrefs=parseHrefs(text)
     for url in hrefs:
         while (not isAbs(url)) and('href="'+url in text):
             index=text.find('href="'+url)
-            text=text[:index+6]+getAbsUrl(url,path)+text[index+len(url)+6:]
+            text=text[:index+6]+getAbsUrl(url,srcurl)+text[index+len(url)+6:]
     return text
 
 def isAbs(url):
@@ -123,7 +117,11 @@ def getFileName(url):
         url=url[:url.rfind('?')]
     if not '/' in url: return url
     else : return url[url.rfind('/')+1:]
+def getFrameName(url):
+    return url[url.rfind('/')+1:url.rfind('?')]
 def getAbsUrl(url,path):
+    if path.count('/')==2:
+        path+='/'
     if path[-1]!='/' :
         if path.rfind('.')>path.rfind('/'):
             path=path[:path.rfind('/')+1]
