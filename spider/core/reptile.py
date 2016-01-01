@@ -208,7 +208,8 @@ class Spider:
             processLock.acquire()
             processEventBus.pushEvent(events.ProcessEvent(content=1))
             processLock.release()
-
+    def shut(self):
+        self.alive=False
 def startFetch(url,savePath,usecookie,Lock,UrlPool,EventBus):  
     '''
     pars:
@@ -218,6 +219,7 @@ def startFetch(url,savePath,usecookie,Lock,UrlPool,EventBus):
     global processLock,resourceUrlPool,processEventBus
     processLock,resourceUrlPool,processEventBus=Lock,UrlPool,EventBus
     worker=Spider({'path':savePath})
+    processEventBus.registry(events.ShutListener(worker.shut))
     thread=threading.Thread(target=worker.fetchPage(url, usecookie),args=(url,usecookie))
     thread.start()
     thread.join()

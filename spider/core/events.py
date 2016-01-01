@@ -64,3 +64,15 @@ class ProcessEvent(Event):
         Event.__init__(self,'processevent')
         self.eventname='processevent'
         self.content=content
+        
+class ShutListener(EventListener):
+    def __init__(self,callback):
+        EventListener.__init__(self,"shutevent")
+        self.callback=callback
+    def handle(self,event):
+        self.callback()
+        
+class ShutEvent(Event):
+    def __init__(self):
+        Event.__init__(self,'shutevent')
+        self.eventname='shutevent'

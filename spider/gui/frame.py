@@ -2,26 +2,16 @@
 '''
 Created on 2015年11月30日
 底层和GUI间只由reptile.core.reptile.Reptile对象和此对象交互
-这个类包装整个GUI，并由此调用底层的入口Reptile.fetchWebpage(url[,advancedOption])
+这个类包装整个GUI，并由此调用Launcher的入口Reptile.startFetch
 @author: 
 '''
-#开始爬取的布局...
-#正确打开设置、高级设置...
-#正确布局设置界面...
-#正确退出对话窗口...
-#返回设置的内容，dictionary...
-#设计更新进度条的接口(line 43-46)
 from Tkinter import *
 from FileDialog import *
 import threading
 import tkMessageBox
 import tkFileDialog
-#import spider.Launcher as Launcher
 class Window:
-    '''
-    classdocs
-    '''
-    def __init__(self,callback):                                                                                 # 构建基础用户界面的所有基本控件
+    def __init__(self,callback,shut):                                                                                 # 构建基础用户界面的所有基本控件
         self.root = Tk()
         self.root.title("网页爬取器")
         
@@ -70,6 +60,7 @@ class Window:
         self.settings={'urllistfile':'','usecookie':1}
         self.advancedSettings=("","")
         self.callback=callback
+        self.shut=shut
         
         self.root.resizable(False, False)
         
@@ -120,7 +111,7 @@ class Window:
         #self.callback(url,path,self.settings,self.advancedSettings)
 
     def end(self):                                                                                      # 调用程序结束页面的爬取的函数
-        #self.label3.grid_forget()
+        self.shut()
         self.unlock()
 
     def quit(self):                                                                                     # 退出该程序
@@ -142,9 +133,6 @@ class AdvancedOptionsDialog:
         
         
         Label(self.top,text='URL参数列表').grid(row=0,column=0,columnspan=3,sticky=W+E)
-        
-#         self.button_append = Button(self.top,text='  添加  ',command=self.append)
-#         self.button_append.grid(row=1,column=4,sticky=W+E)
         
         Label(self.top,text="参数名").grid(row=1,column=0,sticky=W)
         self.e3 = Entry(self.top,textvariable=self.var_3)
@@ -170,7 +158,7 @@ class AdvancedOptionsDialog:
     def show(self):
         try:
             self.top.deiconify()
-        except TclError:
+        except TclError:#处理关闭窗口后，无法令窗口重现的情况
             self=AdvancedOptionsDialog(self.father)
             self.advancedSettings=self.father.advancedSettings
         self.var_3.set(self.advancedSettings[0])
@@ -180,7 +168,15 @@ class AdvancedOptionsDialog:
         self.top.withdraw()              
                     
     def makesure(self):
-        #todo :eval check
+        #检查参数取值是否有语法错误或返回类型不可迭代
+        try:
+            t=eval(self.var_4.get())
+        except SyntaxError:
+            tkMessageBox.showerror(u'错误', u'输入的表达式有语法错误')
+            return
+        if type(t)!=list and type(t)!=set and type(t)!=tuple :
+            tkMessageBox.showerror(u'错误', u'参数取值不是可迭代对象')
+            return
         self.top.withdraw()
         self.advancedSettings=self.getadvancedSettings()
         self.father.advancedSettings=self.getadvancedSettings()
@@ -193,31 +189,22 @@ class AdvancedOptionsDialog:
 class OptionsDialog:
     def __init__(self,father):                                                                                # 构建设置用户界面的控件
         self.father=father
-        self.settings={'threads':1,'urllistfile':'','usecookie':1}
+        self.settings={'urllistfile':'','usecookie':1}
         
         self.top = Toplevel()
         self.top.title("设置")
         self.top.resizable(False, False)
         
-        #self.entry5 = StringVar()
-        #self.entry5.set(' ')  
-        self.entry_urlListFile = StringVar()
-        self.entry_urlListFile.set(' ')          
-        self.entry_threads = StringVar()
-        self.entry_threads.set('1')
+        self.var_urlListFile = StringVar()
+        self.var_urlListFile.set(' ')          
         
-        #self.e5 = Entry(self.top,textvariable=self.entry5)
-        self.e6 = Entry(self.top,textvariable=self.entry_urlListFile)
-        self.e4 = Entry(self.top,textvariable=self.entry_threads)
+        self.e6 = Entry(self.top,textvariable=self.var_urlListFile)
         
-        #self.e5.grid(row=0,column=1,columnspan=3)
         self.e6.grid(row=0,column=1,columnspan=3)
-        self.e4.grid(row=1,column=1,columnspan=3)
         
-        #Label(self.top,text='   设置URL参数  ').grid(row=0,column=0,sticky=W)
         Label(self.top,text='设置URL列表文件').grid(row=0,column=0,sticky=W)
-        Label(self.top,text='       线程数   ').grid(row=1,column=0,sticky=W)
-        
+        self.button_browse=Button(self.top,text=' 浏览 ',command=self.browse)
+        self.button_browse.grid(row=0,column=4)
         
         self.checkbutton=Checkbutton(self.top,text='使用cookie')
         self.checkbutton.grid(row=2,column=0,columnspan=3,sticky=W)
@@ -226,26 +213,27 @@ class OptionsDialog:
         self.b12 = Button(self.top,text='   取消   ',command=self.quitset)
         self.b11.grid(row=4,column=2)
         self.b12.grid(row=4,column=3)
-        
+    def browse(self):
+        path=tkFileDialog.askopenfilename()
+        self.var_urlListFile.set(path)
     def show(self):
         try:
             self.top.deiconify()
         except TclError:
             self=OptionsDialog(self.father)
             self.settings=self.father.settings
-        self.entry_threads.set(self.settings['threads'])
-        self.entry_urlListFile.set(self.settings['urllistfile'])
+        self.var_urlListFile.set(self.settings['urllistfile'])
         self.checkbutton.variable=(self.settings['usecookie'])
         return self
     def hide(self):
         self.top.withdraw()
     
     def getsettings(self):                                                                            # 得到用户的设置                                                                     
-        dic = {'threads':self.entry_threads.get(),'urllistfile':self.entry_urlListFile.get(),'usecookie':self.checkbutton.variable}
+        dic = {'urllistfile':self.var_urlListFile.get(),'usecookie':self.checkbutton.variable}
         return dic
         
     def suretoset(self):                     # 将用户的设置储存起来
-        path=self.entry_urlListFile.get()
+        path=self.var_urlListFile.get()
         if not (os.path.isfile(path) or os.path.exists(path) or path==""):
             tkMessageBox.showerror(u"错误",u"文件不存在！")
             return 0
