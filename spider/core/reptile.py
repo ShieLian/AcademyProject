@@ -85,15 +85,19 @@ class Spider:
             resourceUrlPool|=resourceUrls
             processLock.release()
         frameUrls=parserlib.parseFrames(html)
-        '''@todo'''
+        self.path=self.path.encode('u8')
         sameNameNum=0
-        while os.path.exists(self.path+title+".html"):
-            print sameNameNum
+        while os.path.exists((self.path+title+".html").decode('u8')):
+            f=open((self.path+title+".html").decode('u8'),'r')#从保存的网页的开头拿出该网页的原url
+            text=f.readline()
+            f.close()
+            text=text[text.find('from ')+5:-4]
+            if text in url or url in text:
+                return
             sameNameNum+=1
             title='%s(%d)'%(self.title,sameNameNum)
-        print title
-        if not os.path.exists((self.path+self.title+'/').decode('utf-8')):
-            os.makedirs((self.path+self.title+'/').decode('utf-8'))
+        if not os.path.exists((self.path+title+'/').decode('u8')):
+            os.makedirs((self.path+title+'/').decode('utf-8'))
         for resourceurl in resourceUrls:
             if not self.alive:
                 return
@@ -122,9 +126,6 @@ class Spider:
             processLock.acquire()
             processEventBus.pushEvent(events.ProcessEvent(content=-1))
             processLock.release()
-        #global resourceUrlPool
-        for url in resourceUrlPool:
-            print url
             
     def fetchFrame(self,url,path,usecookie):
         """
@@ -214,7 +215,6 @@ def startFetch(url,savePath,usecookie,Lock,UrlPool,EventBus):
         string url
         dic advancedOption
     '''
-    #urllib队列
     global processLock,resourceUrlPool,processEventBus
     processLock,resourceUrlPool,processEventBus=Lock,UrlPool,EventBus
     worker=Spider({'path':savePath})

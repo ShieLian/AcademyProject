@@ -24,7 +24,6 @@ def parseImgs(html):
             imgs[i]=re.findall('src=("[^"]+")', imgs[i])[0]
         else:
             imgs[i]=re.findall("src=('[^']+)", imgs[i])[0]
-#         imgs[i]=re.findall('src=("[^"]+")|(\'[^\']+\')', imgs[i])[0]
         if imgs[i][0]=='"' or imgs[i][0]=="'": imgs[i]=imgs[i][1:]
         if imgs[i][-1]=='"' or imgs[i][-1]=="'": imgs[i]=imgs[i][:-1]
     imgset=set(imgs)
@@ -89,7 +88,6 @@ def filtUrl(text,srcurl,title='.'):
     '''
         过滤URL，资源只保留title/filename，链接补全为绝对URL
     '''
-    #urls=parseImgs(text)|parseStyles(text)|parseScripts(text)|parseStyleImgs(text)|parseFrames(text)
     urls=parseSrcs(text)|parseStyleImgs(text)
     for url in urls:
         buffer=""
@@ -181,7 +179,6 @@ def getUrlList(targetUrl,settings,advancedSettings):
         del(j)
         par_index_map[par]=(start,end)
     else:
-        #TODO
         targetUrl+=par+'=&'
         par_index_map[par]=(len(targetUrl)-1,len(targetUrl)-1)
     urllist=[targetUrl]
